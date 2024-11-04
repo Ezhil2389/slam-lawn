@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { MapPin, Navigation, Play, Pause, TreeDeciduous, Info, Battery, Zap, ChevronDown, Menu, X, RotateCcw } from 'lucide-react';
+import { MapPin, Navigation, Play, Pause, TreeDeciduous, Info, Battery, Zap, ChevronDown, Menu, X, RotateCcw, Wifi } from 'lucide-react';
+import { RobotConnection } from './components/RobotConnection';
+import { RobotDashboard } from './components/RobotDashboard';
 import './index.css';
 
 const Section = ({ id, title, children, bgColor = 'bg-white' }) => (
@@ -251,10 +253,11 @@ const LawnMowerSimulation = () => {
   );
 };
 
-
 const ProjectPage = () => {
   const [activeSection, setActiveSection] = useState('overview');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showConnection, setShowConnection] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -284,17 +287,84 @@ const ProjectPage = () => {
     }
   }, []);
 
+  const handleConnectClick = () => {
+    setShowConnection(true);
+    setShowDashboard(false);
+  };
+
+  const handleDashboardClick = () => {
+    setShowDashboard(true);
+    setShowConnection(false);
+  };
+
+  // If either modal is shown, render it instead of the main content
+  if (showConnection) {
+    return (
+      <div>
+        <header className="fixed w-full z-50 bg-white shadow-md">
+          <nav className="container mx-auto px-4 py-4">
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-extrabold text-blue-600 tracking-tight">AutoMow</h1>
+              <button
+                onClick={() => setShowConnection(false)}
+                className="text-gray-600 hover:text-blue-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+          </nav>
+        </header>
+        <RobotConnection />
+      </div>
+    );
+  }
+
+  if (showDashboard) {
+    return (
+      <div>
+        <header className="fixed w-full z-50 bg-white shadow-md">
+          <nav className="container mx-auto px-4 py-4">
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-extrabold text-blue-600 tracking-tight">AutoMow</h1>
+              <button
+                onClick={() => setShowDashboard(false)}
+                className="text-gray-600 hover:text-blue-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+          </nav>
+        </header>
+        <RobotDashboard />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen font-sans bg-green-50">
       <header className="fixed w-full z-50 bg-white shadow-md">
         <nav className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-extrabold text-blue-600 tracking-tight">AutoMow</h1>
-            <div className="hidden md:flex space-x-4">
+            <div className="hidden md:flex items-center space-x-4">
               <NavLink href="#overview" isActive={activeSection === 'overview'} onClick={() => handleNavClick('overview')}>Overview</NavLink>
               <NavLink href="#simulation" isActive={activeSection === 'simulation'} onClick={() => handleNavClick('simulation')}>Simulation</NavLink>
               <NavLink href="#technology" isActive={activeSection === 'technology'} onClick={() => handleNavClick('technology')}>Technology</NavLink>
               <NavLink href="#team" isActive={activeSection === 'team'} onClick={() => handleNavClick('team')}>Team</NavLink>
+              <button
+                onClick={handleConnectClick}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-300"
+              >
+                <Wifi size={20} />
+                <span>Connect</span>
+              </button>
+              <button
+                onClick={handleDashboardClick}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors duration-300"
+              >
+                <Navigation size={20} />
+                <span>Dashboard</span>
+              </button>
             </div>
             <div className="md:hidden">
               <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-gray-600 hover:text-blue-600">
@@ -310,6 +380,20 @@ const ProjectPage = () => {
               <NavLink href="#simulation" isActive={activeSection === 'simulation'} onClick={() => handleNavClick('simulation')}>Simulation</NavLink>
               <NavLink href="#technology" isActive={activeSection === 'technology'} onClick={() => handleNavClick('technology')}>Technology</NavLink>
               <NavLink href="#team" isActive={activeSection === 'team'} onClick={() => handleNavClick('team')}>Team</NavLink>
+              <button
+                onClick={handleConnectClick}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-300"
+              >
+                <Wifi size={20} />
+                <span>Connect</span>
+              </button>
+              <button
+                onClick={handleDashboardClick}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors duration-300"
+              >
+                <Navigation size={20} />
+                <span>Dashboard</span>
+              </button>
             </div>
           </div>
         )}
