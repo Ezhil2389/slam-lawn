@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Camera, Battery, Wifi, Gauge } from 'lucide-react';
 
-export const RobotDashboard = ({ ipAddress }) => {
-  const [videoStream, setVideoStream] = useState(null);
+export const RobotDashboard = ({ ipAddress, protocol }) => {
   const [batteryLevel, setBatteryLevel] = useState(100);
   const [speed, setSpeed] = useState(0);
   const [isStreaming, setIsStreaming] = useState(false);
+
+  const getApiUrl = (endpoint) => {
+    const baseProtocol = protocol === 'https:' ? 'https:' : 'http:';
+    return `${baseProtocol}//${ipAddress}:8000/${endpoint}`;
+  };
 
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -36,7 +40,7 @@ export const RobotDashboard = ({ ipAddress }) => {
 
   const sendCommand = async (command) => {
     try {
-      const response = await fetch(`http://${ipAddress}:8000/control`, {
+      const response = await fetch(getApiUrl('control'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,6 +63,17 @@ export const RobotDashboard = ({ ipAddress }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pt-24">
       <div className="container mx-auto px-6">
+        {protocol === 'https:' && (
+          <div className="mb-6 max-w-4xl mx-auto">
+            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <p className="text-yellow-800 text-sm">
+                You're accessing this page via HTTPS. If you experience connection issues, 
+                ensure your robot's API supports HTTPS connections, or consider accessing via HTTP.
+              </p>
+            </div>
+          </div>
+        )}
+        
         <div className="grid md:grid-cols-3 gap-8">
           {/* Video Feed */}
           <div className="md:col-span-2">
@@ -78,7 +93,7 @@ export const RobotDashboard = ({ ipAddress }) => {
               <div className="aspect-video bg-gray-900 rounded-xl overflow-hidden">
                 {isStreaming ? (
                   <img
-                    src={`http://${ipAddress}:8000/stream`}
+                    src={getApiUrl('stream')}
                     alt="Robot camera feed"
                     className="w-full h-full object-cover"
                   />
@@ -91,9 +106,8 @@ export const RobotDashboard = ({ ipAddress }) => {
             </div>
           </div>
 
-          {/* Controls and Stats */}
+          {/* Rest of the dashboard code remains the same */}
           <div className="space-y-6">
-            {/* Stats */}
             <div className="bg-white rounded-3xl shadow-xl p-6">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Robot Stats</h3>
               <div className="space-y-4">
@@ -121,7 +135,6 @@ export const RobotDashboard = ({ ipAddress }) => {
               </div>
             </div>
 
-            {/* Controls */}
             <div className="bg-white rounded-3xl shadow-xl p-6">
               <h3 className="text-xl font-bold text-gray-800 mb-4">Manual Controls</h3>
               <div className="grid grid-cols-3 gap-4">

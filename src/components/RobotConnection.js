@@ -6,16 +6,29 @@ export const RobotConnection = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('Disconnected');
   const [ipAddress, setIpAddress] = useState(() => {
-    // Initialize IP from localStorage if available
     const savedIP = localStorage.getItem('robotIP');
     return savedIP || '';
   });
   const [cameraStatus, setCameraStatus] = useState('unknown');
   const [statusCheckInterval, setStatusCheckInterval] = useState(null);
+  const [protocol, setProtocol] = useState(() => window.location.protocol);
+
+  useEffect(() => {
+    // Update protocol if window is available (client-side)
+    if (typeof window !== 'undefined') {
+      setProtocol(window.location.protocol);
+    }
+  }, []);
+
+  const getApiUrl = (endpoint) => {
+    // If we're on HTTPS, try to use WSS/HTTPS for the robot connection
+    const baseProtocol = protocol === 'https:' ? 'https:' : 'http:';
+    return `${baseProtocol}//${ipAddress}:8000/${endpoint}`;
+  };
 
   const checkStatus = async () => {
     try {
-      const response = await fetch(`http://${ipAddress}:8000/status`, {
+      const response = await fetch(getApiUrl('status'), {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -32,7 +45,11 @@ export const RobotConnection = () => {
       }
     } catch (error) {
       setIsConnected(false);
-      setConnectionStatus('Connection lost');
+      setConnectionStatus(
+        protocol === 'https:' 
+          ? 'Connection failed. If using HTTPS, ensure robot supports secure connection or access via HTTP.'
+          : 'Connection lost'
+      );
       setCameraStatus('unknown');
       clearInterval(statusCheckInterval);
       localStorage.removeItem('robotIP');
@@ -49,7 +66,7 @@ export const RobotConnection = () => {
     setConnectionStatus('Connecting...');
     
     try {
-      const response = await fetch(`http://${ipAddress}:8000/status`);
+      const response = await fetch(getApiUrl('status'));
       
       if (response.ok) {
         const data = await response.json();
@@ -58,14 +75,17 @@ export const RobotConnection = () => {
         setCameraStatus(data.camera);
         localStorage.setItem('robotIP', ipAddress);
         
-        // Start periodic status checking
         const intervalId = setInterval(checkStatus, 5000);
         setStatusCheckInterval(intervalId);
       } else {
         throw new Error('Connection failed');
       }
     } catch (error) {
-      setConnectionStatus('Connection failed');
+      const errorMessage = protocol === 'https:'
+        ? 'Connection failed. If using HTTPS, ensure robot supports secure connection or access via HTTP.'
+        : 'Connection failed. Please check the IP address and ensure the robot is powered on.';
+      
+      setConnectionStatus(errorMessage);
       setIsConnected(false);
       setCameraStatus('unknown');
       localStorage.removeItem('robotIP');
@@ -82,7 +102,6 @@ export const RobotConnection = () => {
   };
 
   useEffect(() => {
-    // Cleanup interval on component unmount
     return () => {
       if (statusCheckInterval) {
         clearInterval(statusCheckInterval);
@@ -91,7 +110,7 @@ export const RobotConnection = () => {
   }, [statusCheckInterval]);
 
   if (isConnected) {
-    return <RobotDashboard ipAddress={ipAddress} />;
+    return <RobotDashboard ipAddress={ipAddress} protocol={protocol} />;
   }
   
   return (
@@ -105,6 +124,15 @@ export const RobotConnection = () => {
               <WifiOff className="text-red-500 w-8 h-8" />
             }
           </div>
+          
+          {protocol === 'https:' && (
+            <div className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <p className="text-yellow-800 text-sm">
+                You're accessing this page via HTTPS. Make sure your robot's API supports HTTPS connections, 
+                or consider accessing this page via HTTP if secure connection is not available.
+              </p>
+            </div>
+          )}
           
           <div className="space-y-6">
             <div>
