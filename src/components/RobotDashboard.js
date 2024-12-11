@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Camera, Battery, Wifi, Gauge } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Camera, Battery, Wifi, Gauge, Navigation } from 'lucide-react';
+import MapComponent from './MapComponent';
+import ScheduleTimer from './ScheduleTimer';
 
 export const RobotDashboard = ({ ipAddress, protocol }) => {
   const [batteryLevel, setBatteryLevel] = useState(100);
   const [speed, setSpeed] = useState(0);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [geofenceCoordinates, setGeofenceCoordinates] = useState(null);
+  const [isObstacleMode, setIsObstacleMode] = useState(false);
+
+  const handleGeofenceSet = (coordinates) => {
+    setGeofenceCoordinates(coordinates);
+  };
+  
+  const handleUseGeofence = () => {
+    // This is where you would send the coordinates to the backend
+    console.log('Sending geofence coordinates:', geofenceCoordinates);
+  };
 
   const getApiUrl = (endpoint) => {
     const baseProtocol = protocol === 'https:' ? 'https:' : 'http:';
@@ -60,9 +73,29 @@ export const RobotDashboard = ({ ipAddress, protocol }) => {
     setIsStreaming(!isStreaming);
   };
 
+  const toggleObstacleMode = async () => {
+    try {
+      const response = await fetch(getApiUrl('obstacle-mode'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ enabled: !isObstacleMode })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to toggle obstacle mode');
+      }
+      
+      setIsObstacleMode(!isObstacleMode);
+    } catch (error) {
+      console.error('Error toggling obstacle mode:', error);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pt-24">
-      <div className="container mx-auto px-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <div className="container mx-auto px-6 py-20">
         {protocol === 'https:' && (
           <div className="mb-6 max-w-4xl mx-auto">
             <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
@@ -105,6 +138,8 @@ export const RobotDashboard = ({ ipAddress, protocol }) => {
               </div>
             </div>
           </div>
+
+          
 
           {/* Rest of the dashboard code remains the same */}
           <div className="space-y-6">
@@ -173,9 +208,61 @@ export const RobotDashboard = ({ ipAddress, protocol }) => {
                 </button>
                 <div></div>
               </div>
+              
+            </div>
+            
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={toggleObstacleMode}
+                className={`px-6 py-3 rounded-xl font-medium transition-colors duration-300 flex items-center ${
+                  isObstacleMode
+                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+                }`}
+              >
+                <Navigation className="w-5 h-5 mr-2" />
+                {isObstacleMode ? 'Stop Autonomous Mode' : 'Start Autonomous Mode'}
+              </button>
             </div>
           </div>
+          
         </div>
+        <div className="md:col-span-2 mt-8">
+  <div className="bg-white rounded-3xl shadow-xl p-6">
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-2xl font-bold text-gray-800">Geofence Setup</h2>
+      <button
+        onClick={handleUseGeofence}
+        disabled={!geofenceCoordinates}
+        className={`px-4 py-2 rounded-lg ${
+          geofenceCoordinates
+            ? 'bg-blue-600 hover:bg-blue-700'
+            : 'bg-gray-300 cursor-not-allowed'
+        } text-white transition-colors duration-300`}
+      >
+        Use Geofence
+      </button>
+    </div>
+    <MapComponent onGeofenceSet={handleGeofenceSet} />
+    {geofenceCoordinates && (
+      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+        <h3 className="text-sm font-medium text-gray-600 mb-2">Geofence Boundary Points:</h3>
+        <div className="max-h-40 overflow-y-auto">
+          <pre className="text-xs">
+            {JSON.stringify(geofenceCoordinates.coordinates, null, 2)}
+          </pre>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          {geofenceCoordinates.coordinates.length} points defined
+        </p>
+      </div>
+    )}
+  </div>
+  <div className="mt-8">
+          <ScheduleTimer />
+        </div>
+</div>
+        
       </div>
     </div>
   );

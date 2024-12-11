@@ -128,7 +128,7 @@ const ProjectPage = () => {
 
   return (
     <div className="min-h-screen font-sans bg-green-50">
-      <header className="fixed w-full z-50 bg-white shadow-md">
+      <header className="fixed w-full z-[100] bg-white/95 backdrop-blur-sm shadow-md">
         <nav className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-extrabold text-blue-600 tracking-tight">AutoMow</h1>

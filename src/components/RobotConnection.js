@@ -114,8 +114,8 @@ export const RobotConnection = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pt-24">
-      <div className="container mx-auto px-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <div className="container mx-auto px-6 py-20">
         <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl p-8">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-3xl font-bold text-gray-800">Robot Connection</h2>
