@@ -110,7 +110,12 @@ export const RobotConnection = () => {
   }, [statusCheckInterval]);
 
   if (isConnected) {
-    return <RobotDashboard ipAddress={ipAddress} protocol={protocol} />;
+    return <RobotDashboard 
+      ipAddress={ipAddress} 
+      protocol={protocol} 
+      isConnected={isConnected}
+      onDisconnect={handleDisconnect}
+    />;
   }
   
   return (

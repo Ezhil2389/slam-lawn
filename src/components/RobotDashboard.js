@@ -1,22 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Camera, Battery, Wifi, Gauge, Navigation } from 'lucide-react';
-import MapComponent from './MapComponent';
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Camera, Battery, Wifi, Gauge, Navigation, StopCircle, GamepadIcon} from 'lucide-react';
 import ScheduleTimer from './ScheduleTimer';
+import LocalizationStats from './LocalizationStats';
 
-export const RobotDashboard = ({ ipAddress, protocol }) => {
-  const [batteryLevel, setBatteryLevel] = useState(100);
-  const [speed, setSpeed] = useState(0);
+export const RobotDashboard = ({ ipAddress, protocol, isConnected, onDisconnect }) => {
   const [isStreaming, setIsStreaming] = useState(false);
-  const [geofenceCoordinates, setGeofenceCoordinates] = useState(null);
+  const [geofenceLength, setGeofenceLength] = useState('');
+  const [geofenceBreadth, setGeofenceBreadth] = useState('');
   const [isObstacleMode, setIsObstacleMode] = useState(false);
 
-  const handleGeofenceSet = (coordinates) => {
-    setGeofenceCoordinates(coordinates);
-  };
-  
-  const handleUseGeofence = () => {
-    // This is where you would send the coordinates to the backend
-    console.log('Sending geofence coordinates:', geofenceCoordinates);
+  const handleGeofenceSubmit = async () => {
+    try {
+      const response = await fetch(getApiUrl('geofence'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          length: parseFloat(geofenceLength),
+          breadth: parseFloat(geofenceBreadth)
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to set geofence');
+      }
+      
+      alert('Geofence set successfully');
+    } catch (error) {
+      console.error('Error setting geofence:', error);
+      alert('Failed to set geofence');
+    }
   };
 
   const getApiUrl = (endpoint) => {
@@ -139,130 +153,169 @@ export const RobotDashboard = ({ ipAddress, protocol }) => {
             </div>
           </div>
 
-          
-
-          {/* Rest of the dashboard code remains the same */}
+          {/* Controls Section */}
           <div className="space-y-6">
-            <div className="bg-white rounded-3xl shadow-xl p-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Robot Stats</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Battery</span>
-                  <div className="flex items-center">
-                    <Battery className="w-5 h-5 mr-2 text-green-500" />
-                    <span className="font-medium">{batteryLevel}%</span>
+            <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <div className={`w-full flex items-center justify-between space-x-4 px-8 py-6 rounded-2xl ${
+                  isConnected 
+                    ? 'bg-green-50 border-2 border-green-200'
+                    : 'bg-red-50 border-2 border-red-200'
+                }`}>
+                  <div className="flex items-center space-x-4">
+                    <Wifi className={`w-8 h-8 ${
+                      isConnected ? 'text-green-600' : 'text-red-600'
+                    }`} />
+                    <div className="flex flex-col">
+                      <span className="text-xl font-semibold">
+                        {isConnected ? 'Connected' : 'Disconnected'}
+                      </span>
+                      {isConnected && (
+                        <span className="text-sm text-green-600">
+                          {ipAddress}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Speed</span>
-                  <div className="flex items-center">
-                    <Gauge className="w-5 h-5 mr-2 text-blue-500" />
-                    <span className="font-medium">{speed} m/s</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Connection</span>
-                  <div className="flex items-center">
-                    <Wifi className="w-5 h-5 mr-2 text-green-500" />
-                    <span className="font-medium">Connected</span>
-                  </div>
+                  {isConnected && (
+                    <button
+                      onClick={onDisconnect}
+                      className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-300"
+                    >
+                      Disconnect
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-3xl shadow-xl p-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Manual Controls</h3>
-              <div className="grid grid-cols-3 gap-4">
+            <div className="bg-white rounded-3xl shadow-xl p-6 backdrop-blur-sm bg-white/80">
+              <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <GamepadIcon className="w-6 h-6 mr-2 text-blue-600" />
+                Manual Controls
+              </h3>
+              
+              <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
                 <div></div>
                 <button
                   onClick={() => sendCommand('forward')}
-                  className="bg-blue-100 hover:bg-blue-200 p-4 rounded-xl transition-colors duration-300"
+                  className="bg-blue-100 hover:bg-blue-200 p-4 rounded-xl transition-all duration-300 hover:shadow-md active:scale-95"
                 >
                   <ArrowUp className="w-8 h-8 text-blue-600 mx-auto" />
                 </button>
                 <div></div>
+                
                 <button
                   onClick={() => sendCommand('left')}
-                  className="bg-blue-100 hover:bg-blue-200 p-4 rounded-xl transition-colors duration-300"
+                  className="bg-blue-100 hover:bg-blue-200 p-4 rounded-xl transition-all duration-300 hover:shadow-md active:scale-95"
                 >
                   <ArrowLeft className="w-8 h-8 text-blue-600 mx-auto" />
                 </button>
                 <button
                   onClick={() => sendCommand('stop')}
-                  className="bg-red-100 hover:bg-red-200 p-4 rounded-xl transition-colors duration-300"
+                  className="bg-red-100 hover:bg-red-200 p-4 rounded-xl transition-all duration-300 hover:shadow-md active:scale-95"
                 >
-                  <div className="w-4 h-4 bg-red-600 rounded-full mx-auto"></div>
+                  <StopCircle className="w-8 h-8 text-red-600 mx-auto" />
                 </button>
                 <button
                   onClick={() => sendCommand('right')}
-                  className="bg-blue-100 hover:bg-blue-200 p-4 rounded-xl transition-colors duration-300"
+                  className="bg-blue-100 hover:bg-blue-200 p-4 rounded-xl transition-all duration-300 hover:shadow-md active:scale-95"
                 >
                   <ArrowRight className="w-8 h-8 text-blue-600 mx-auto" />
                 </button>
+
                 <div></div>
                 <button
                   onClick={() => sendCommand('backward')}
-                  className="bg-blue-100 hover:bg-blue-200 p-4 rounded-xl transition-colors duration-300"
+                  className="bg-blue-100 hover:bg-blue-200 p-4 rounded-xl transition-all duration-300 hover:shadow-md active:scale-95"
                 >
                   <ArrowDown className="w-8 h-8 text-blue-600 mx-auto" />
                 </button>
                 <div></div>
               </div>
-              
             </div>
             
-            <div className="mt-6 flex justify-center">
+            <div className="mt-8">
               <button
                 onClick={toggleObstacleMode}
-                className={`px-6 py-3 rounded-xl font-medium transition-colors duration-300 flex items-center ${
-                  isObstacleMode
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
+                className={`
+                  w-full max-w-2xl mx-auto
+                  px-8 py-6 rounded-2xl
+                  font-medium
+                  transition-all duration-300
+                  flex items-center justify-center space-x-4
+                  shadow-lg hover:shadow-xl
+                  ${
+                    isObstacleMode
+                      ? 'bg-red-500 hover:bg-red-600 text-white'
+                      : 'bg-green-500 hover:bg-green-600 text-white'
+                  }
+                `}
               >
-                <Navigation className="w-5 h-5 mr-2" />
-                {isObstacleMode ? 'Stop Autonomous Mode' : 'Start Autonomous Mode'}
+                <Navigation className="w-8 h-8" />
+                <span className="text-xl font-semibold">
+                  {isObstacleMode ? 'Stop Autonomous Mode' : 'Start Autonomous Mode'}
+                </span>
               </button>
             </div>
           </div>
-          
         </div>
+
+        {/* Geofence and Schedule Section */}
         <div className="md:col-span-2 mt-8">
-  <div className="bg-white rounded-3xl shadow-xl p-6">
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-2xl font-bold text-gray-800">Geofence Setup</h2>
-      <button
-        onClick={handleUseGeofence}
-        disabled={!geofenceCoordinates}
-        className={`px-4 py-2 rounded-lg ${
-          geofenceCoordinates
-            ? 'bg-blue-600 hover:bg-blue-700'
-            : 'bg-gray-300 cursor-not-allowed'
-        } text-white transition-colors duration-300`}
-      >
-        Use Geofence
-      </button>
-    </div>
-    <MapComponent onGeofenceSet={handleGeofenceSet} />
-    {geofenceCoordinates && (
-      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-        <h3 className="text-sm font-medium text-gray-600 mb-2">Geofence Boundary Points:</h3>
-        <div className="max-h-40 overflow-y-auto">
-          <pre className="text-xs">
-            {JSON.stringify(geofenceCoordinates.coordinates, null, 2)}
-          </pre>
+          <div className="bg-white rounded-3xl shadow-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">Geofence Setup</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-2">
+                  Length (metres)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={geofenceLength}
+                  onChange={(e) => setGeofenceLength(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-2">
+                  Breadth (metres)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={geofenceBreadth}
+                  onChange={(e) => setGeofenceBreadth(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            <button
+              onClick={handleGeofenceSubmit}
+              disabled={!geofenceLength || !geofenceBreadth}
+              className={`w-full px-4 py-2 rounded-lg ${
+                geofenceLength && geofenceBreadth
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-gray-300 cursor-not-allowed'
+              } text-white transition-colors duration-300`}
+            >
+              Set Geofence
+            </button>
+          </div>
+          <div className="mt-8">
+            <ScheduleTimer />
+          </div>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          {geofenceCoordinates.coordinates.length} points defined
-        </p>
-      </div>
-    )}
-  </div>
-  <div className="mt-8">
-          <ScheduleTimer />
+
+        {/* Add LocalizationStats at the bottom */}
+        <div className="mt-8">
+          <LocalizationStats 
+            isAutonomous={isObstacleMode}
+          />
         </div>
-</div>
-        
       </div>
     </div>
   );
